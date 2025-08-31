@@ -42,7 +42,6 @@ export function useReminders() {
    const filteredReminders = computed(() => {
       let filtered = [...reminders.value];
 
-      // Filter by search query
       if (searchQuery.value) {
          const query = searchQuery.value.toLowerCase();
          filtered = filtered.filter(r =>
@@ -51,17 +50,14 @@ export function useReminders() {
          );
       }
 
-      // Filter by category
       if (selectedCategory.value !== 'all') {
          filtered = filtered.filter(r => r.type === selectedCategory.value);
       }
 
-      // Filter by completion status
       if (showOnlyPending.value) {
          filtered = filtered.filter(r => !r.completed);
       }
 
-      // Filter by date range
       if (selectedFilter.value !== 'all') {
          const filterMap = {
             'today': 1,
@@ -95,7 +91,6 @@ export function useReminders() {
       return { total, completed, pending, urgent };
    });
 
-   // Initialize
    loadReminders();
 
    return {
