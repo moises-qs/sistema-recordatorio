@@ -7,7 +7,6 @@ export function useReminders() {
    const searchQuery = ref('');
    const selectedFilter = ref('all');
    const selectedCategory = ref('all');
-   const showOnlyPending = ref(true);
 
    const loadReminders = () => {
       reminders.value = storage.getReminders();
@@ -54,10 +53,6 @@ export function useReminders() {
          filtered = filtered.filter(r => r.type === selectedCategory.value);
       }
 
-      if (showOnlyPending.value) {
-         filtered = filtered.filter(r => !r.completed);
-      }
-
       if (selectedFilter.value !== 'all') {
          const filterMap = {
             'today': 1,
@@ -98,7 +93,6 @@ export function useReminders() {
       searchQuery,
       selectedFilter,
       selectedCategory,
-      showOnlyPending,
       filteredReminders,
       upcomingReminders,
       stats,

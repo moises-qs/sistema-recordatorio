@@ -17,7 +17,6 @@ const {
    searchQuery,
    selectedFilter,
    selectedCategory,
-   showOnlyPending,
    filteredReminders,
    upcomingReminders,
    stats,
@@ -31,9 +30,63 @@ const {
 const showModal = ref(false);
 const editingReminder = ref(null);
 const currentView = ref('all'); // 'all' | 'upcoming'
+const quickStatsFilter = ref('pending'); // 'all' | 'pending' | 'completed' | 'urgent'
 
 const groupedReminders = computed(() => {
-   return groupByDate(filteredReminders.value);
+   return groupByDate(quickStatsFilteredReminders.value);
+});
+
+/**
+ * Filtra recordatorios basado en la selección de QuickStats
+ */
+const quickStatsFilteredReminders = computed(() => {
+   const baseReminders = currentView.value === 'upcoming' ? upcomingReminders.value : filteredReminders.value;
+   
+   switch (quickStatsFilter.value) {
+      case 'pending':
+         return baseReminders.filter(reminder => !reminder.completed);
+      case 'completed':
+         return baseReminders.filter(reminder => reminder.completed);
+      case 'urgent':
+         return baseReminders.filter(reminder => {
+            if (reminder.completed) return false;
+            const now = new Date();
+            const reminderDate = new Date(reminder.date);
+            const diffHours = (reminderDate - now) / (1000 * 60 * 60);
+            return diffHours <= 24 && diffHours >= 0;
+         });
+      case 'all':
+      default:
+         return baseReminders;
+   }
+});
+
+/**
+ * Maneja el cambio de filtro desde QuickStats
+ * @param {string} filter - Tipo de filtro seleccionado
+ */
+const handleQuickStatsFilter = (filter) => {
+   quickStatsFilter.value = filter;
+};
+
+/**
+ * Obtiene la etiqueta del filtro activo
+ */
+const getFilterLabel = computed(() => {
+   const labels = {
+      pending: 'Recordatorios pendientes',
+      urgent: 'Recordatorios urgentes', 
+      completed: 'Recordatorios completados',
+      all: 'Todos los recordatorios'
+   };
+   
+   const baseLabel = labels[quickStatsFilter.value] || labels.pending;
+   
+   if (currentView.value === 'upcoming' && quickStatsFilter.value !== 'pending') {
+      return `${baseLabel} (próximos 7 días)`;
+   }
+   
+   return currentView.value === 'upcoming' ? 'Próximos 7 días' : baseLabel;
 });
 
 const handleAddReminder = (data) => {
@@ -72,11 +125,11 @@ const closeModal = () => {
 };
 
 const getCurrentViewLabel = computed(() => {
-   return currentView.value === 'upcoming' ? 'Próximos 7 días' : 'Todos los recordatorios';
+   return getFilterLabel.value;
 });
 
 const currentReminders = computed(() => {
-   return currentView.value === 'upcoming' ? upcomingReminders.value : filteredReminders.value;
+   return quickStatsFilteredReminders.value;
 });
 
 const handleClearCompleted = () => {
@@ -87,6 +140,14 @@ const handleImportReminders = (importedReminders) => {
    importedReminders.forEach(reminder => {
       addReminder(reminder);
    });
+};
+
+/**
+ * Resetea los filtros de QuickStats cuando cambia la vista principal
+ */
+const handleViewChange = (view) => {
+   currentView.value = view;
+   quickStatsFilter.value = 'pending'; // Reset QuickStats filter to pending
 };
 </script>
 
@@ -143,24 +204,43 @@ const handleImportReminders = (importedReminders) => {
       <main class="max-w-4xl mx-auto px-4 py-6 pb-20">
          <!-- Quick Stats - Desktop -->
          <div class="mb-6 hidden md:block">
-            <QuickStats :stats="stats" />
+            <QuickStats :stats="stats" :active-filter="quickStatsFilter" @filter-change="handleQuickStatsFilter" />
          </div>
 
          <!-- Quick Stats - Mobile -->
          <div class="mb-6 md:hidden">
-            <QuickStatsMobile :stats="stats" />
+            <QuickStatsMobile :stats="stats" :active-filter="quickStatsFilter" @filter-change="handleQuickStatsFilter" />
+         </div>
+
+         <!-- Active Filter Indicator -->
+         <div v-if="quickStatsFilter !== 'pending'" class="mb-4">
+            <div class="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+               <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                  </svg>
+                  <span class="text-sm font-medium text-blue-700">
+                     Filtro activo: {{ getFilterLabel.replace('recordatorios', '').trim() }}
+                  </span>
+               </div>
+               <button @click="quickStatsFilter = 'pending'" 
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200">
+                  Ver pendientes
+               </button>
+            </div>
          </div>
 
          <!-- Filter Bar - Desktop -->
          <div v-if="currentView === 'all'" class="mb-6 hidden md:block">
             <FilterBar v-model:searchQuery="searchQuery" v-model:selectedCategory="selectedCategory"
-               v-model:selectedFilter="selectedFilter" v-model:showOnlyPending="showOnlyPending" />
+               v-model:selectedFilter="selectedFilter" />
          </div>
 
          <!-- Filter Bar - Mobile -->
          <div v-if="currentView === 'all'" class="mb-6 md:hidden">
             <FilterBarMobile v-model:searchQuery="searchQuery" v-model:selectedCategory="selectedCategory"
-               v-model:selectedFilter="selectedFilter" v-model:showOnlyPending="showOnlyPending" />
+               v-model:selectedFilter="selectedFilter" />
          </div>
 
          <!-- Content -->
@@ -176,7 +256,7 @@ const handleImportReminders = (importedReminders) => {
 
                <!-- Mobile View Toggle -->
                <div class="sm:hidden flex items-center gap-2 p-1 bg-gray-100 rounded-xl">
-                  <button @click="currentView = 'all'" :class="[
+                  <button @click="handleViewChange('all')" :class="[
                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200',
                      currentView === 'all'
                         ? 'bg-white text-primary-600 shadow-sm'
@@ -184,7 +264,7 @@ const handleImportReminders = (importedReminders) => {
                   ]">
                      Todos
                   </button>
-                  <button @click="currentView = 'upcoming'" :class="[
+                  <button @click="handleViewChange('upcoming')" :class="[
                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200',
                      currentView === 'upcoming'
                         ? 'bg-white text-primary-600 shadow-sm'

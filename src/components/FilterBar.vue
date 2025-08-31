@@ -47,20 +47,6 @@
                {{ filter.label }}
             </button>
          </div>
-
-         <!-- Status Toggle -->
-         <button @click="$emit('update:showOnlyPending', !showOnlyPending)" :class="[
-            'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-            showOnlyPending
-               ? 'bg-primary-100 text-primary-700 border border-primary-200'
-               : 'bg-gray-100 text-gray-600 hover:text-gray-900'
-         ]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Solo pendientes
-         </button>
       </div>
 
       <!-- Active Filters Summary -->
@@ -104,18 +90,13 @@ const props = defineProps({
    selectedFilter: {
       type: String,
       default: 'all'
-   },
-   showOnlyPending: {
-      type: Boolean,
-      default: false
    }
 });
 
 const emit = defineEmits([
    'update:searchQuery',
    'update:selectedCategory',
-   'update:selectedFilter',
-   'update:showOnlyPending'
+   'update:selectedFilter'
 ]);
 
 const categories = [
@@ -136,8 +117,7 @@ const dateFilters = [
 const hasActiveFilters = computed(() => {
    return props.searchQuery ||
       props.selectedCategory !== 'all' ||
-      props.selectedFilter !== 'all' ||
-      props.showOnlyPending;
+      props.selectedFilter !== 'all';
 });
 
 const getCategoryLabel = (value) => {
@@ -158,6 +138,5 @@ const clearAllFilters = () => {
    emit('update:searchQuery', '');
    emit('update:selectedCategory', 'all');
    emit('update:selectedFilter', 'all');
-   emit('update:showOnlyPending', false);
 };
 </script>
