@@ -28,13 +28,16 @@
 							<!-- Title -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Título del recordatorio
+									Título del recordatorio *
 								</label>
 								<input v-model="formData.title" type="text" required placeholder="Ej: Examen de Cálculo II"
-									class="input-field" :class="{ 'ring-2 ring-red-500': errors.title }"
-									@input="errors.title = false" />
+									class="input-field" :class="{ 'ring-2 ring-red-500 border-red-500': errors.title }"
+									@input="errors.title = ''" @blur="errors.title = validateTitle(formData.title)" />
 								<p v-if="errors.title" class="mt-1 text-xs text-red-500">
-									El título es obligatorio
+									{{ errors.title }}
+								</p>
+								<p v-else class="mt-1 text-xs text-gray-500">
+									Mínimo 3 caracteres, máximo 100 caracteres
 								</p>
 							</div>
 
@@ -44,7 +47,19 @@
 									Descripción (opcional)
 								</label>
 								<textarea v-model="formData.description" rows="2" placeholder="Añade detalles importantes..."
-									class="input-field resize-none" />
+									class="input-field resize-none" :class="{ 'ring-2 ring-red-500 border-red-500': errors.description }"
+									@input="errors.description = ''" @blur="errors.description = validateDescription(formData.description)" />
+								<div class="flex justify-between mt-1">
+									<p v-if="errors.description" class="text-xs text-red-500">
+										{{ errors.description }}
+									</p>
+									<p v-else class="text-xs text-gray-500">
+										Máximo 500 caracteres
+									</p>
+									<p class="text-xs text-gray-400">
+										{{ (formData.description || '').length }}/500
+									</p>
+								</div>
 							</div>
 
 							<!-- Type -->
@@ -69,13 +84,16 @@
 							<!-- Date and Time -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Fecha y hora
+									Fecha y hora *
 								</label>
 								<input v-model="formData.date" type="datetime-local" required :min="minDateTime"
-									class="input-field" :class="{ 'ring-2 ring-red-500': errors.date }"
-									@input="errors.date = false" />
+									class="input-field" :class="{ 'ring-2 ring-red-500 border-red-500': errors.date }"
+									@input="errors.date = ''" @blur="errors.date = validateDate(formData.date)" />
 								<p v-if="errors.date" class="mt-1 text-xs text-red-500">
-									La fecha debe ser futura
+									{{ errors.date }}
+								</p>
+								<p v-else class="mt-1 text-xs text-gray-500">
+									Debe ser al menos 1 minuto en el futuro
 								</p>
 							</div>
 
@@ -99,9 +117,26 @@
 									Cancelar
 								</button>
 								<button type="submit" :disabled="!isFormValid"
-									class="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
+									:class="[
+										'btn-primary flex-1 transition-all duration-200',
+										!isFormValid 
+											? 'opacity-50 cursor-not-allowed bg-gray-400 hover:bg-gray-400' 
+											: 'hover:shadow-lg transform hover:scale-[1.02]'
+									]">
 									{{ editMode ? 'Guardar' : 'Crear' }}
 								</button>
+							</div>
+							
+							<!-- Form validation summary -->
+							<div v-if="Object.values(errors).some(error => error)" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+								<p class="text-sm text-red-700 font-medium mb-1">
+									Por favor, corrige los siguientes errores:
+								</p>
+								<ul class="text-xs text-red-600 space-y-1">
+									<li v-if="errors.title">• {{ errors.title }}</li>
+									<li v-if="errors.description">• {{ errors.description }}</li>
+									<li v-if="errors.date">• {{ errors.date }}</li>
+								</ul>
 							</div>
 						</form>
 					</div>
@@ -143,8 +178,9 @@ const formData = ref({
 });
 
 const errors = ref({
-	title: false,
-	date: false
+	title: '',
+	description: '',
+	date: ''
 });
 
 const editMode = computed(() => !!props.editReminder);
@@ -156,8 +192,111 @@ const minDateTime = computed(() => {
 });
 
 const isFormValid = computed(() => {
-	return formData.value.title && formData.value.date && new Date(formData.value.date) > new Date();
+	return validateTitle(formData.value.title) === '' && 
+		   validateDate(formData.value.date) === '';
 });
+
+/**
+ * Valida el título del recordatorio
+ * @param {string} title - Título a validar
+ * @returns {string} Mensaje de error o cadena vacía si es válido
+ */
+const validateTitle = (title) => {
+	if (!title || typeof title !== 'string') {
+		return 'El título es obligatorio';
+	}
+	
+	const trimmedTitle = title.trim();
+	
+	if (trimmedTitle.length === 0) {
+		return 'El título no puede estar vacío o contener solo espacios';
+	}
+	
+	if (trimmedTitle.length < 3) {
+		return 'El título debe tener al menos 3 caracteres';
+	}
+	
+	if (trimmedTitle.length > 100) {
+		return 'El título no puede exceder 100 caracteres';
+	}
+	
+	// Verificar que no contenga solo caracteres especiales
+	const hasAlphanumeric = /[a-zA-Z0-9]/.test(trimmedTitle);
+	if (!hasAlphanumeric) {
+		return 'El título debe contener al menos una letra o número';
+	}
+	
+	return '';
+};
+
+/**
+ * Valida la descripción del recordatorio
+ * @param {string} description - Descripción a validar
+ * @returns {string} Mensaje de error o cadena vacía si es válido
+ */
+const validateDescription = (description) => {
+	if (!description) return '';
+	
+	const trimmedDescription = description.trim();
+	
+	if (trimmedDescription.length > 500) {
+		return 'La descripción no puede exceder 500 caracteres';
+	}
+	
+	return '';
+};
+
+/**
+ * Valida la fecha del recordatorio
+ * @param {string} date - Fecha a validar
+ * @returns {string} Mensaje de error o cadena vacía si es válido
+ */
+const validateDate = (date) => {
+	if (!date) {
+		return 'La fecha y hora son obligatorias';
+	}
+	
+	const selectedDate = new Date(date);
+	const now = new Date();
+	
+	// Verificar que la fecha sea válida
+	if (isNaN(selectedDate.getTime())) {
+		return 'La fecha seleccionada no es válida';
+	}
+	
+	// Verificar que la fecha sea futura (al menos 1 minuto)
+	const oneMinuteFromNow = new Date(now.getTime() + 60000);
+	if (selectedDate <= oneMinuteFromNow) {
+		return 'La fecha debe ser al menos 1 minuto en el futuro';
+	}
+	
+	// Verificar que la fecha no sea demasiado lejana (máximo 5 años)
+	const fiveYearsFromNow = new Date();
+	fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
+	if (selectedDate > fiveYearsFromNow) {
+		return 'La fecha no puede ser más de 5 años en el futuro';
+	}
+	
+	return '';
+};
+
+/**
+ * Valida todos los campos del formulario
+ * @returns {boolean} true si todos los campos son válidos
+ */
+const validateForm = () => {
+	const titleError = validateTitle(formData.value.title);
+	const descriptionError = validateDescription(formData.value.description);
+	const dateError = validateDate(formData.value.date);
+	
+	errors.value = {
+		title: titleError,
+		description: descriptionError,
+		date: dateError
+	};
+	
+	return !titleError && !descriptionError && !dateError;
+};
 
 const urgencyInfo = computed(() => {
 	if (!formData.value.date) return null;
@@ -186,17 +325,16 @@ const urgencyInfo = computed(() => {
 });
 
 const handleSubmit = () => {
-	// Validate
-	if (!formData.value.title) {
-		errors.value.title = true;
+	// Limpiar espacios en blanco al inicio y final
+	formData.value.title = formData.value.title?.trim() || '';
+	formData.value.description = formData.value.description?.trim() || '';
+	
+	// Validar formulario completo
+	if (!validateForm()) {
 		return;
 	}
-
-	if (!formData.value.date || new Date(formData.value.date) <= new Date()) {
-		errors.value.date = true;
-		return;
-	}
-
+	
+	// Si llegamos aquí, todos los campos son válidos
 	emit('submit', { ...formData.value });
 	close();
 };
@@ -214,8 +352,9 @@ const resetForm = () => {
 		date: ''
 	};
 	errors.value = {
-		title: false,
-		date: false
+		title: '',
+		description: '',
+		date: ''
 	};
 };
 
@@ -242,6 +381,27 @@ watch(() => props.isOpen, (newVal) => {
 		nextHour.setSeconds(0);
 		nextHour.setMinutes(nextHour.getMinutes() - nextHour.getTimezoneOffset());
 		formData.value.date = nextHour.toISOString().slice(0, 16);
+	}
+});
+
+// Validación en tiempo real para el título
+watch(() => formData.value.title, (newVal) => {
+	if (errors.value.title && newVal) {
+		errors.value.title = validateTitle(newVal);
+	}
+});
+
+// Validación en tiempo real para la descripción
+watch(() => formData.value.description, (newVal) => {
+	if (errors.value.description && newVal !== undefined) {
+		errors.value.description = validateDescription(newVal);
+	}
+});
+
+// Validación en tiempo real para la fecha
+watch(() => formData.value.date, (newVal) => {
+	if (errors.value.date && newVal) {
+		errors.value.date = validateDate(newVal);
 	}
 });
 </script>
