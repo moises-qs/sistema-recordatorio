@@ -1,88 +1,32 @@
-import { ref, computed, watch } from 'vue';
-import { storage } from '../utils/localStorage';
-import { sortByDate, filterByDateRange, getUrgencyLevel } from '../utils/dateHelpers';
-import { DATE_FILTER_MAP, URGENCY_LEVELS } from '../config/constants';
+import { useReminderActions } from './useReminderActions';
+import { useReminderFilters } from './useReminderFilters';
+import { useReminderStats } from './useReminderStats';
 
 export function useReminders() {
-   const reminders = ref([]);
-   const searchQuery = ref('');
-   const selectedFilter = ref('all');
-   const selectedCategory = ref('all');
+   // Composable para operaciones CRUD
+   const {
+      reminders,
+      loadReminders,
+      addReminder,
+      updateReminder,
+      deleteReminder,
+      toggleComplete,
+      clearCompleted
+   } = useReminderActions();
 
-   const loadReminders = () => {
-      reminders.value = storage.getReminders();
-   };
+   // Composable para filtrado y búsqueda
+   const {
+      searchQuery,
+      selectedFilter,
+      selectedCategory,
+      filteredReminders,
+      upcomingReminders
+   } = useReminderFilters(reminders);
 
-   const addReminder = (reminderData) => {
-      const newReminder = storage.addReminder(reminderData);
-      loadReminders();
-      return newReminder;
-   };
-
-   const updateReminder = (id, updates) => {
-      storage.updateReminder(id, updates);
-      loadReminders();
-   };
-
-   const deleteReminder = (id) => {
-      storage.deleteReminder(id);
-      loadReminders();
-   };
-
-   const toggleComplete = (id) => {
-      storage.toggleComplete(id);
-      loadReminders();
-   };
-
-   const clearCompleted = () => {
-      storage.clearCompleted();
-      loadReminders();
-   };
-
-   const filteredReminders = computed(() => {
-      let filtered = [...reminders.value];
-
-      if (searchQuery.value) {
-         const query = searchQuery.value.toLowerCase();
-         filtered = filtered.filter(r =>
-            r.title.toLowerCase().includes(query) ||
-            r.description?.toLowerCase().includes(query)
-         );
-      }
-
-      if (selectedCategory.value !== 'all') {
-         filtered = filtered.filter(r => r.type === selectedCategory.value);
-      }
-
-      if (selectedFilter.value !== 'all') {
-         const days = DATE_FILTER_MAP[selectedFilter.value];
-         if (days) {
-            filtered = filterByDateRange(filtered, days);
-         }
-      }
-
-      return sortByDate(filtered);
-   });
-
-   const upcomingReminders = computed(() => {
-      return filterByDateRange(
-         reminders.value.filter(r => !r.completed),
-         7
-      ).slice(0, 5);
-   });
-
-   const stats = computed(() => {
-      const total = reminders.value.length;
-      const completed = reminders.value.filter(r => r.completed).length;
-      const pending = total - completed;
-      const urgent = reminders.value.filter(r =>
-         !r.completed && getUrgencyLevel(r.date) === URGENCY_LEVELS.URGENT
-      ).length;
-
-      return { total, completed, pending, urgent };
-   });
-
-   loadReminders();
+   // Composable para estadísticas
+   const {
+      stats
+   } = useReminderStats(reminders);
 
    return {
       reminders,
