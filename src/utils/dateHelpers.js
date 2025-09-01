@@ -1,3 +1,11 @@
+import { 
+   DATE_TIME_CONFIG, 
+   RELATIVE_DATE_LABELS,
+   URGENCY_LEVELS,
+   URGENCY_COLORS,
+   URGENCY_LABELS 
+} from '../config/constants.js';
+
 /**
  * Formatea una fecha en un formato legible para el usuario en español
  * @param {string} dateString - La fecha en formato string que puede ser parseada por el constructor Date
@@ -17,22 +25,14 @@ export const formatDate = (dateString) => {
    const isTomorrow = date.toDateString() === tomorrow.toDateString();
 
    if (isToday) {
-      return `Hoy, ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${RELATIVE_DATE_LABELS.TODAY}, ${date.toLocaleTimeString(DATE_TIME_CONFIG.LOCALE, DATE_TIME_CONFIG.TIME_FORMAT)}`;
    }
 
    if (isTomorrow) {
-      return `Mañana, ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${RELATIVE_DATE_LABELS.TOMORROW}, ${date.toLocaleTimeString(DATE_TIME_CONFIG.LOCALE, DATE_TIME_CONFIG.TIME_FORMAT)}`;
    }
 
-   const options = {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-   };
-
-   return date.toLocaleDateString('es-ES', options);
+   return date.toLocaleDateString(DATE_TIME_CONFIG.LOCALE, DATE_TIME_CONFIG.DATE_FORMAT);
 };
 
 /**
@@ -48,12 +48,12 @@ export const getUrgencyLevel = (dateString) => {
    const date = new Date(dateString);
    const now = new Date();
    const diffTime = date - now;
-   const diffHours = diffTime / (1000 * 60 * 60);
+   const diffHours = diffTime / DATE_TIME_CONFIG.TIME_CONVERSIONS.MILLISECONDS_PER_HOUR;
 
-   if (diffHours < 0) return 'overdue';
-   if (diffHours <= 24) return 'urgent';
-   if (diffHours <= 72) return 'soon';
-   return 'normal';
+   if (diffHours < 0) return URGENCY_LEVELS.OVERDUE;
+   if (diffHours <= DATE_TIME_CONFIG.URGENCY_THRESHOLDS.URGENT_HOURS) return URGENCY_LEVELS.URGENT;
+   if (diffHours <= DATE_TIME_CONFIG.URGENCY_THRESHOLDS.SOON_HOURS) return URGENCY_LEVELS.SOON;
+   return URGENCY_LEVELS.NORMAL;
 };
 
 /**
@@ -66,13 +66,7 @@ export const getUrgencyLevel = (dateString) => {
  * getUrgencyColor('normal') // 'info'
  */
 export const getUrgencyColor = (urgencyLevel) => {
-   const colors = {
-      overdue: 'danger',
-      urgent: 'danger',
-      soon: 'warning',
-      normal: 'info'
-   };
-   return colors[urgencyLevel] || 'info';
+   return URGENCY_COLORS[urgencyLevel] || URGENCY_COLORS[URGENCY_LEVELS.NORMAL];
 };
 
 /**
@@ -85,13 +79,7 @@ export const getUrgencyColor = (urgencyLevel) => {
  * getUrgencyLabel('normal') // 'Pendiente'
  */
 export const getUrgencyLabel = (urgencyLevel) => {
-   const labels = {
-      overdue: 'Vencido',
-      urgent: 'Urgente',
-      soon: 'Próximo',
-      normal: 'Pendiente'
-   };
-   return labels[urgencyLevel] || 'Pendiente';
+   return URGENCY_LABELS[urgencyLevel] || URGENCY_LABELS[URGENCY_LEVELS.NORMAL];
 };
 
 /**
@@ -156,13 +144,13 @@ export const groupByDate = (reminders) => {
       let key;
 
       if (date.toDateString() === now.toDateString()) {
-         key = 'Hoy';
+         key = RELATIVE_DATE_LABELS.TODAY;
       } else if (date.toDateString() === tomorrow.toDateString()) {
-         key = 'Mañana';
+         key = RELATIVE_DATE_LABELS.TOMORROW;
       } else if (date < now) {
-         key = 'Vencidos';
+         key = RELATIVE_DATE_LABELS.OVERDUE;
       } else {
-         key = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+         key = date.toLocaleDateString(DATE_TIME_CONFIG.LOCALE, DATE_TIME_CONFIG.GROUP_DATE_FORMAT);
       }
 
       if (!groups[key]) {

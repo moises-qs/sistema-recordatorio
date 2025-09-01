@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue';
 import { storage } from '../utils/localStorage';
 import { sortByDate, filterByDateRange, getUrgencyLevel } from '../utils/dateHelpers';
+import { DATE_FILTER_MAP, URGENCY_LEVELS } from '../config/constants';
 
 export function useReminders() {
    const reminders = ref([]);
@@ -54,12 +55,7 @@ export function useReminders() {
       }
 
       if (selectedFilter.value !== 'all') {
-         const filterMap = {
-            'today': 1,
-            'week': 7,
-            'month': 30
-         };
-         const days = filterMap[selectedFilter.value];
+         const days = DATE_FILTER_MAP[selectedFilter.value];
          if (days) {
             filtered = filterByDateRange(filtered, days);
          }
@@ -80,7 +76,7 @@ export function useReminders() {
       const completed = reminders.value.filter(r => r.completed).length;
       const pending = total - completed;
       const urgent = reminders.value.filter(r =>
-         !r.completed && getUrgencyLevel(r.date) === 'urgent'
+         !r.completed && getUrgencyLevel(r.date) === URGENCY_LEVELS.URGENT
       ).length;
 
       return { total, completed, pending, urgent };

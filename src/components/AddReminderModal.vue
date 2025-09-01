@@ -13,7 +13,7 @@
 						<!-- Header -->
 						<div class="flex items-center justify-between p-6 border-b border-gray-100">
 							<h2 class="text-xl font-bold text-gray-900">
-								{{ editMode ? 'Editar Recordatorio' : 'Nuevo Recordatorio' }}
+								{{ editMode ? UI_LABELS.MODAL.EDIT_TITLE : UI_LABELS.MODAL.NEW_TITLE }}
 							</h2>
 							<button @click="close" class="p-2 hover:bg-gray-100 rounded-xl transition-colors duration-200">
 								<svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,25 +28,25 @@
 							<!-- Title -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Título del recordatorio *
+									{{ UI_LABELS.FORM.TITLE_LABEL }}
 								</label>
-								<input v-model="formData.title" type="text" required placeholder="Ej: Examen de Cálculo II"
+								<input v-model="formData.title" type="text" required :placeholder="UI_LABELS.FORM.TITLE_PLACEHOLDER"
 									class="input-field" :class="{ 'ring-2 ring-red-500 border-red-500': errors.title }"
 									@input="errors.title = ''" @blur="errors.title = validateTitle(formData.title)" />
 								<p v-if="errors.title" class="mt-1 text-xs text-red-500">
 									{{ errors.title }}
 								</p>
 								<p v-else class="mt-1 text-xs text-gray-500">
-									Mínimo 3 caracteres, máximo 100 caracteres
+									{{ UI_LABELS.FORM.TITLE_HELPER }}
 								</p>
 							</div>
 
 							<!-- Description -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Descripción (opcional)
+									{{ UI_LABELS.FORM.DESCRIPTION_LABEL }}
 								</label>
-								<textarea v-model="formData.description" rows="2" placeholder="Añade detalles importantes..."
+								<textarea v-model="formData.description" rows="2" :placeholder="UI_LABELS.FORM.DESCRIPTION_PLACEHOLDER"
 									class="input-field resize-none" :class="{ 'ring-2 ring-red-500 border-red-500': errors.description }"
 									@input="errors.description = ''" @blur="errors.description = validateDescription(formData.description)" />
 								<div class="flex justify-between mt-1">
@@ -54,10 +54,10 @@
 										{{ errors.description }}
 									</p>
 									<p v-else class="text-xs text-gray-500">
-										Máximo 500 caracteres
+										{{ UI_LABELS.FORM.DESCRIPTION_HELPER }}
 									</p>
 									<p class="text-xs text-gray-400">
-										{{ (formData.description || '').length }}/500
+										{{ (formData.description || '').length }}/{{ VALIDATION_RULES.DESCRIPTION.MAX_LENGTH }}
 									</p>
 								</div>
 							</div>
@@ -65,10 +65,10 @@
 							<!-- Type -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Tipo de recordatorio
+									{{ UI_LABELS.FORM.TYPE_LABEL }}
 								</label>
 								<div class="grid grid-cols-2 gap-3">
-									<button v-for="type in reminderTypes" :key="type.value" type="button"
+									<button v-for="type in REMINDER_TYPES" :key="type.value" type="button"
 										@click="formData.type = type.value" :class="[
 											'flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200',
 											formData.type === type.value
@@ -84,7 +84,7 @@
 							<!-- Date and Time -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Fecha y hora *
+									{{ UI_LABELS.FORM.DATE_LABEL }}
 								</label>
 								<input v-model="formData.date" type="datetime-local" required :min="minDateTime"
 									class="input-field" :class="{ 'ring-2 ring-red-500 border-red-500': errors.date }"
@@ -93,7 +93,7 @@
 									{{ errors.date }}
 								</p>
 								<p v-else class="mt-1 text-xs text-gray-500">
-									Debe ser al menos 1 minuto en el futuro
+									{{ UI_LABELS.FORM.DATE_HELPER }}
 								</p>
 							</div>
 
@@ -114,7 +114,7 @@
 							<!-- Actions -->
 							<div class="flex gap-3 pt-2">
 								<button type="button" @click="close" class="btn-secondary flex-1">
-									Cancelar
+									{{ UI_LABELS.MODAL.CANCEL }}
 								</button>
 								<button type="submit" :disabled="!isFormValid"
 									:class="[
@@ -123,14 +123,14 @@
 											? 'opacity-50 cursor-not-allowed bg-gray-400 hover:bg-gray-400' 
 											: 'hover:shadow-lg transform hover:scale-[1.02]'
 									]">
-									{{ editMode ? 'Guardar' : 'Crear' }}
+									{{ editMode ? UI_LABELS.MODAL.SAVE : UI_LABELS.MODAL.CREATE }}
 								</button>
 							</div>
 							
 							<!-- Form validation summary -->
 							<div v-if="Object.values(errors).some(error => error)" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
 								<p class="text-sm text-red-700 font-medium mb-1">
-									Por favor, corrige los siguientes errores:
+									{{ UI_LABELS.FORM.VALIDATION_SUMMARY }}
 								</p>
 								<ul class="text-xs text-red-600 space-y-1">
 									<li v-if="errors.title">• {{ errors.title }}</li>
@@ -149,6 +149,15 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { getUrgencyLevel } from '../utils/dateHelpers';
+import { 
+   REMINDER_TYPES, 
+   DEFAULT_REMINDER_TYPE,
+   VALIDATION_RULES,
+   VALIDATION_MESSAGES,
+   URGENCY_INFO_MAP,
+   UI_LABELS,
+   Z_INDEX
+} from '../config/constants';
 
 const props = defineProps({
 	isOpen: {
@@ -163,17 +172,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
-const reminderTypes = [
-	{ value: 'exam', label: 'Examen', icon: '📚' },
-	{ value: 'task', label: 'Tarea', icon: '📝' },
-	{ value: 'presentation', label: 'Presentación', icon: '🎤' },
-	{ value: 'meeting', label: 'Reunión', icon: '👥' }
-];
-
 const formData = ref({
 	title: '',
 	description: '',
-	type: 'task',
+	type: DEFAULT_REMINDER_TYPE,
 	date: ''
 });
 
@@ -203,27 +205,27 @@ const isFormValid = computed(() => {
  */
 const validateTitle = (title) => {
 	if (!title || typeof title !== 'string') {
-		return 'El título es obligatorio';
+		return VALIDATION_MESSAGES.TITLE.REQUIRED;
 	}
 	
 	const trimmedTitle = title.trim();
 	
 	if (trimmedTitle.length === 0) {
-		return 'El título no puede estar vacío o contener solo espacios';
+		return VALIDATION_MESSAGES.TITLE.EMPTY;
 	}
 	
-	if (trimmedTitle.length < 3) {
-		return 'El título debe tener al menos 3 caracteres';
+	if (trimmedTitle.length < VALIDATION_RULES.TITLE.MIN_LENGTH) {
+		return VALIDATION_MESSAGES.TITLE.MIN_LENGTH;
 	}
 	
-	if (trimmedTitle.length > 100) {
-		return 'El título no puede exceder 100 caracteres';
+	if (trimmedTitle.length > VALIDATION_RULES.TITLE.MAX_LENGTH) {
+		return VALIDATION_MESSAGES.TITLE.MAX_LENGTH;
 	}
 	
 	// Verificar que no contenga solo caracteres especiales
-	const hasAlphanumeric = /[a-zA-Z0-9]/.test(trimmedTitle);
+	const hasAlphanumeric = VALIDATION_RULES.TITLE.REGEX.test(trimmedTitle);
 	if (!hasAlphanumeric) {
-		return 'El título debe contener al menos una letra o número';
+		return VALIDATION_MESSAGES.TITLE.INVALID_CHARS;
 	}
 	
 	return '';
@@ -239,8 +241,8 @@ const validateDescription = (description) => {
 	
 	const trimmedDescription = description.trim();
 	
-	if (trimmedDescription.length > 500) {
-		return 'La descripción no puede exceder 500 caracteres';
+	if (trimmedDescription.length > VALIDATION_RULES.DESCRIPTION.MAX_LENGTH) {
+		return VALIDATION_MESSAGES.DESCRIPTION.MAX_LENGTH;
 	}
 	
 	return '';
@@ -253,7 +255,7 @@ const validateDescription = (description) => {
  */
 const validateDate = (date) => {
 	if (!date) {
-		return 'La fecha y hora son obligatorias';
+		return VALIDATION_MESSAGES.DATE.REQUIRED;
 	}
 	
 	const selectedDate = new Date(date);
@@ -261,20 +263,20 @@ const validateDate = (date) => {
 	
 	// Verificar que la fecha sea válida
 	if (isNaN(selectedDate.getTime())) {
-		return 'La fecha seleccionada no es válida';
+		return VALIDATION_MESSAGES.DATE.INVALID;
 	}
 	
 	// Verificar que la fecha sea futura (al menos 1 minuto)
-	const oneMinuteFromNow = new Date(now.getTime() + 60000);
+	const oneMinuteFromNow = new Date(now.getTime() + (VALIDATION_RULES.DATE.MIN_FUTURE_MINUTES * 60000));
 	if (selectedDate <= oneMinuteFromNow) {
-		return 'La fecha debe ser al menos 1 minuto en el futuro';
+		return VALIDATION_MESSAGES.DATE.PAST;
 	}
 	
 	// Verificar que la fecha no sea demasiado lejana (máximo 5 años)
 	const fiveYearsFromNow = new Date();
-	fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
+	fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + VALIDATION_RULES.DATE.MAX_FUTURE_YEARS);
 	if (selectedDate > fiveYearsFromNow) {
-		return 'La fecha no puede ser más de 5 años en el futuro';
+		return VALIDATION_MESSAGES.DATE.TOO_FUTURE;
 	}
 	
 	return '';
@@ -302,26 +304,7 @@ const urgencyInfo = computed(() => {
 	if (!formData.value.date) return null;
 
 	const urgency = getUrgencyLevel(formData.value.date);
-
-	const infoMap = {
-		urgent: {
-			message: 'Este recordatorio es urgente (menos de 24 horas)',
-			bgClass: 'bg-red-50 border border-red-200',
-			textClass: 'text-red-700'
-		},
-		soon: {
-			message: 'Este recordatorio es próximo (menos de 3 días)',
-			bgClass: 'bg-amber-50 border border-amber-200',
-			textClass: 'text-amber-700'
-		},
-		normal: {
-			message: 'Tienes tiempo suficiente para prepararte',
-			bgClass: 'bg-blue-50 border border-blue-200',
-			textClass: 'text-blue-700'
-		}
-	};
-
-	return infoMap[urgency] || null;
+	return URGENCY_INFO_MAP[urgency] || null;
 });
 
 const handleSubmit = () => {
@@ -348,7 +331,7 @@ const resetForm = () => {
 	formData.value = {
 		title: '',
 		description: '',
-		type: 'task',
+		type: DEFAULT_REMINDER_TYPE,
 		date: ''
 	};
 	errors.value = {
@@ -364,7 +347,7 @@ watch(() => props.editReminder, (newVal) => {
 		formData.value = {
 			title: newVal.title || '',
 			description: newVal.description || '',
-			type: newVal.type || 'task',
+			type: newVal.type || DEFAULT_REMINDER_TYPE,
 			date: newVal.date ? new Date(newVal.date).toISOString().slice(0, 16) : ''
 		};
 	} else {
