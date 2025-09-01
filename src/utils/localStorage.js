@@ -23,20 +23,98 @@ export const storage = {
    },
 
    /**
-    * Guarda un array de recordatorios en localStorage
+    * Guarda un array de recordatorios en localStorage con manejo completo de errores
     * @param {Array<Object>} reminders - Array de objetos recordatorio a guardar
-    * @returns {boolean} true si se guardó exitosamente, false si hubo error
+    * @returns {{success: boolean, error?: string, errorType?: string}} Objeto con resultado y detalles del error si aplica
     * @example
-    * const success = storage.saveReminders([{id: '1', title: 'Nuevo recordatorio'}]);
-    * if (success) console.log('Guardado exitosamente');
+    * const result = storage.saveReminders([{id: '1', title: 'Nuevo recordatorio'}]);
+    * if (result.success) {
+    *   console.log('Guardado exitosamente');
+    * } else {
+    *   console.error('Error:', result.error, 'Tipo:', result.errorType);
+    * }
     */
    saveReminders(reminders) {
       try {
-         localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders));
-         return true;
+         // Validación de datos de entrada
+         if (!Array.isArray(reminders)) {
+            return {
+               success: false,
+               error: 'Los datos deben ser un array de recordatorios',
+               errorType: 'INVALID_INPUT'
+            };
+         }
+
+         // Verificar que localStorage esté disponible
+         if (typeof Storage === 'undefined') {
+            return {
+               success: false,
+               error: 'localStorage no está disponible en este navegador',
+               errorType: 'NOT_SUPPORTED'
+            };
+         }
+
+         // Intentar serializar los datos para detectar errores de JSON
+         const jsonData = JSON.stringify(reminders);
+
+         // Verificar el tamaño de los datos (localStorage tiene límite ~5-10MB)
+         const dataSize = new Blob([jsonData]).size;
+         if (dataSize > 5000000) { // 5MB
+            return {
+               success: false,
+               error: 'Los datos exceden el límite de almacenamiento (5MB)',
+               errorType: 'SIZE_EXCEEDED'
+            };
+         }
+
+         // Intentar guardar en localStorage
+         localStorage.setItem(STORAGE_KEY, jsonData);
+
+         // Verificar que se guardó correctamente
+         const savedData = localStorage.getItem(STORAGE_KEY);
+         if (!savedData || savedData !== jsonData) {
+            return {
+               success: false,
+               error: 'Error de verificación: los datos no se guardaron correctamente',
+               errorType: 'VERIFICATION_FAILED'
+            };
+         }
+
+         return { success: true };
+
       } catch (error) {
-         console.error('Error saving reminders:', error);
-         return false;
+         // Manejo específico de errores de localStorage
+         if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            return {
+               success: false,
+               error: 'Espacio de almacenamiento insuficiente. Elimina algunos recordatorios o limpia el cache del navegador',
+               errorType: 'QUOTA_EXCEEDED'
+            };
+         }
+
+         if (error.name === 'SecurityError') {
+            return {
+               success: false,
+               error: 'Acceso denegado al almacenamiento local. Verifica la configuración de privacidad del navegador',
+               errorType: 'ACCESS_DENIED'
+            };
+         }
+
+         if (error.name === 'InvalidStateError') {
+            return {
+               success: false,
+               error: 'localStorage está deshabilitado o no disponible',
+               errorType: 'STORAGE_DISABLED'
+            };
+         }
+
+         // Error genérico para cualquier otro caso
+         console.error('Error al guardar recordatorios:', error);
+         return {
+            success: false,
+            error: 'Error al guardar el recordatorio',
+            errorType: 'UNKNOWN_ERROR'
+         };
       }
    },
 
@@ -62,7 +140,13 @@ export const storage = {
          completed: false
       };
       reminders.push(newReminder);
-      this.saveReminders(reminders);
+      
+      const result = this.saveReminders(reminders);
+      if (!result.success) {
+         console.error('Error al añadir recordatorio:', result.error);
+         throw new Error(result.error);
+      }
+      
       return newReminder;
    },
 
@@ -83,7 +167,13 @@ export const storage = {
       const index = reminders.findIndex(r => r.id === id);
       if (index !== -1) {
          reminders[index] = { ...reminders[index], ...updates };
-         this.saveReminders(reminders);
+         
+         const result = this.saveReminders(reminders);
+         if (!result.success) {
+            console.error('Error al actualizar recordatorio:', result.error);
+            throw new Error(result.error);
+         }
+         
          return reminders[index];
       }
       return null;
@@ -100,7 +190,13 @@ export const storage = {
    deleteReminder(id) {
       const reminders = this.getReminders();
       const filtered = reminders.filter(r => r.id !== id);
-      this.saveReminders(filtered);
+      
+      const result = this.saveReminders(filtered);
+      if (!result.success) {
+         console.error('Error al eliminar recordatorio:', result.error);
+         throw new Error(result.error);
+      }
+      
       return filtered;
    },
 
@@ -121,7 +217,13 @@ export const storage = {
       if (reminder) {
          reminder.completed = !reminder.completed;
          reminder.completedAt = reminder.completed ? new Date().toISOString() : null;
-         this.saveReminders(reminders);
+         
+         const result = this.saveReminders(reminders);
+         if (!result.success) {
+            console.error('Error al cambiar estado del recordatorio:', result.error);
+            throw new Error(result.error);
+         }
+         
          return reminder;
       }
       return null;
@@ -137,7 +239,13 @@ export const storage = {
    clearCompleted() {
       const reminders = this.getReminders();
       const active = reminders.filter(r => !r.completed);
-      this.saveReminders(active);
+      
+      const result = this.saveReminders(active);
+      if (!result.success) {
+         console.error('Error al limpiar recordatorios completados:', result.error);
+         throw new Error(result.error);
+      }
+      
       return active;
    }
 };
