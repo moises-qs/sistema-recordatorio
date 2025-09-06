@@ -88,6 +88,234 @@ Si deseas contribuir al proyecto:
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Crea un Pull Request
 
-## 📄 Licencia
+---
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+## Gitflow - Flujo de Trabajo del Equipo
+
+Este proyecto utiliza **Gitflow** como estrategia de ramificación. A continuación se detalla el flujo de trabajo específico para nuestro equipo de desarrollo.
+
+### Estructura de Ramas
+
+- **`main`** - Código de producción estable
+- **`develop`** - Rama de integración para nuevas funcionalidades
+- **`feature/`** - Ramas para desarrollo de nuevas funcionalidades
+- **`hotfix/`** - Ramas para corrección de errores críticos en producción
+- **`release/`** - Ramas para preparar nuevas versiones
+
+### Convenciones de Commits
+
+Utiliza los siguientes prefijos para tus commits:
+
+- **`feat:`** - Nueva funcionalidad
+- **`fix:`** - Corrección de errores
+- **`docs:`** - Cambios en documentación
+- **`refactor:`** - Refactorización de código
+- **`test:`** - Adición o modificación de tests
+- **`chore:`** - Tareas de mantenimiento
+
+**Ejemplos:**
+```bash
+feat: implementa filtrado por categorías
+fix: corrige error en validación de fechas
+docs: actualiza guía de instalación
+```
+
+### Flujo de Trabajo Paso a Paso
+
+#### 1. Configuración Inicial (Solo la primera vez)
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/moises-qs/sistema-recordatorio.git
+cd sistema-recordatorio/edureminder
+
+# Instalar dependencias
+npm install
+
+# Verificar que estás en main
+git branch
+
+# Crear y cambiar a la rama develop (si no existe)
+git checkout -b develop
+git push -u origin develop
+```
+
+#### 2. Creación de Rama para Ticket Asignado
+
+Cada desarrollador debe crear su rama según el ticket asignado:
+
+**Ejemplos de tickets del equipo:**
+
+- **Jorge**: Remover botón de crear reminders
+- **Nils**: Cambiar el logo del proyecto  
+- **Luis**: Implementar el mantenimiento de categorías de reminders
+- **Anco**: Hay un error al filtrar por fechas
+- **Moises**: Documentar guía para trabajar con Gitflow en el README
+
+```bash
+# Asegurarse de estar en develop y actualizado
+git checkout develop
+git pull origin develop
+
+# Crear rama según el tipo de ticket
+# Para Jorge (feature):
+git checkout -b feature/remover-boton-crear-reminders
+
+# Para Nils (feature):
+git checkout -b feature/cambiar-logo-proyecto
+
+# Para Luis (feature):
+git checkout -b feature/mantenimiento-categorias
+
+# Para Anco (bugfix):
+git checkout -b fix/error-filtro-fechas
+
+# Para Moises (docs):
+git checkout -b docs/guia-gitflow-readme
+```
+
+#### 3. Desarrollo y Commits
+
+```bash
+# Realizar cambios en el código
+# Agregar archivos modificados
+git add .
+
+# Hacer commit con convención establecida según tu ticket:
+
+# Para Jorge (remover botón):
+git commit -m "feat: remueve botón de crear reminders de la interfaz"
+
+# Para Nils (cambiar logo):
+git commit -m "feat: actualiza logo del proyecto con nuevo diseño"
+
+# Para Luis (mantenimiento categorías):
+git commit -m "feat: implementa CRUD para mantenimiento de categorías"
+
+# Para Anco (error filtro fechas):
+git commit -m "fix: corrige error al filtrar recordatorios por fechas"
+
+# Para Moises (documentación):
+git commit -m "docs: agrega guía completa de Gitflow al README"
+
+# Subir cambios a tu rama
+git push origin nombre-de-tu-rama
+```
+
+#### 4. Crear Pull Request
+
+Una vez completado el desarrollo:
+
+1. **Subir todos los commits finales**
+```bash
+git push origin nombre-de-tu-rama
+```
+
+2. **Ir a GitHub y crear Pull Request**
+   - Base: `develop` ← Compare: `tu-rama`
+   - **Títulos descriptivos según el ticket:**
+     - **Jorge**: `feat: Remueve botón de crear reminders de la interfaz principal`
+     - **Nils**: `feat: Actualiza logo del proyecto con nuevo diseño`
+     - **Luis**: `feat: Implementa CRUD para mantenimiento de categorías`
+     - **Anco**: `fix: Corrige error al filtrar recordatorios por fechas`
+     - **Moises**: `docs: Agrega guía completa de Gitflow al README`
+   
+   - **Plantilla de descripción (básica):**
+   ```markdown
+   ## ¿Qué cambios hice?
+   [Explica brevemente qué modificaste o agregaste]
+
+   ## ¿Funciona correctamente?
+   - [ ] Sí, probé la funcionalidad en mi computadora
+   - [ ] No hay errores en la consola del navegador
+
+   ## Notas para el revisor
+   [Si hay algo especial que el revisor deba saber o revisar]
+   ```
+
+   - Asignar a **Moises** como revisor
+
+3. **Esperar revisión y aprobación**
+
+
+#### 5. Cuando el Pull Request es Rechazado
+
+**Pasos para el desarrollador:**
+
+```bash
+# Hacer los cambios solicitados en tu rama
+git add .
+git commit -m "fix: corrige observaciones del code review"
+
+# Subir los cambios
+git push origin nombre-de-tu-rama
+
+# El Pull Request se actualiza automáticamente
+# Comentar en GitHub que los cambios están listos
+```
+
+#### 6. Resolución de Conflictos
+
+**Si hay conflictos al hacer merge:**
+
+```bash
+# Actualizar tu rama con los últimos cambios de develop
+git checkout tu-rama
+git pull origin develop
+
+# Resolver conflictos manualmente en los archivos
+# Después de resolver:
+git add .
+git commit -m "fix: resuelve conflictos con develop"
+git push origin tu-rama
+```
+
+#### 7. Hotfixes (Errores Críticos en Producción)
+
+```bash
+# Crear hotfix desde main
+git checkout main
+git pull origin main
+git checkout -b hotfix/descripcion-error
+
+# Hacer el fix
+git add .
+git commit -m "fix: corrige error crítico en producción"
+
+# Subir y crear PR hacia main Y develop
+git push origin hotfix/descripcion-error
+```
+
+#### 8. Releases (Preparar Nueva Versión)
+
+```bash
+# Crear rama release desde develop
+git checkout develop
+git pull origin develop
+git checkout -b release/v1.2.0
+
+# Hacer ajustes finales, actualizar versiones
+git add .
+git commit -m "chore: prepara release v1.2.0"
+
+# Hacer PR hacia main y develop
+git push origin release/v1.2.0
+```
+
+### Checklist para Desarrolladores
+
+Antes de crear un Pull Request, verifica:
+
+- [ ] Tu código está en la rama correcta (`feature/`, `fix/`, etc.)
+- [ ] Los commits siguen la convención establecida
+- [ ] El código funciona correctamente en local
+- [ ] No hay conflictos con `develop`
+- [ ] La descripción del PR es clara y detallada
+- [ ] Has probado tu funcionalidad
+
+### Reglas Importantes
+
+1. **NUNCA** hacer push directo a `main` o `develop`
+2. **SIEMPRE** crear Pull Request para cualquier cambio
+4. Mantener las ramas actualizadas con `develop`
+5. Borrar ramas feature después del merge exitoso
