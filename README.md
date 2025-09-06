@@ -138,7 +138,12 @@ git branch
 # Crear y cambiar a la rama develop (si no existe)
 git checkout -b develop
 git push -u origin develop
+
+# Configurar template de commits (IMPORTANTE)
+git config commit.template .gitmessage
 ```
+
+> **💡 Tip:** El template de commits te ayudará a escribir mensajes consistentes. Usa `git commit` (sin `-m`) para ver la guía completa cada vez que hagas commit.
 
 #### 2. Creación de Rama para Ticket Asignado
 

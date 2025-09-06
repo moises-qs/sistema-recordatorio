@@ -1,0 +1,33 @@
+# tipo(módulo): descripción breve en español
+#
+# [descripción más detallada si es necesaria]
+#
+# Tipos válidos:
+# feat:     Nueva funcionalidad
+# fix:      Corrección de error
+# docs:     Cambios en documentación
+# refactor: Refactorización de código
+# test:     Agregar o corregir tests
+# chore:    Herramientas o configuración
+#
+# Ejemplos por módulo:
+# feat(reminders): agrega filtro por prioridad alta
+# fix(categorias): corrige error al eliminar categoría vacía
+# docs(readme): actualiza guía de instalación
+# refactor(componentes): optimiza renderizado de lista
+# test(utils): agrega pruebas para validación de fechas
+# chore(build): actualiza dependencias de desarrollo
+#
+# Reglas para mensajes:
+# - Usar tiempo presente: "agrega" no "agregó"
+# - Máximo 50 caracteres en la línea del título
+# - Comenzar con minúscula después del tipo
+# - No terminar con punto la descripción breve
+# - Usar línea en blanco antes de descripción detallada
+#
+# Ejemplos específicos del equipo:
+# feat(ui): remueve botón de crear reminders de interfaz
+# feat(branding): actualiza logo del proyecto con nuevo diseño
+# feat(categorias): implementa CRUD para mantenimiento
+# fix(filtros): corrige error al filtrar por fechas
+# docs(gitflow): agrega guía completa de trabajo en equipo
