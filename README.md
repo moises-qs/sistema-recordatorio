@@ -56,7 +56,6 @@ http://localhost:5173
 - **`npm run dev`** - Inicia el servidor de desarrollo
 - **`npm run build`** - Construye la aplicación para producción
 - **`npm run preview`** - Previsualiza la build de producción
-- **`npm run lint`** - Ejecuta el linter para revisar el código
 
 ## 🏗️ Stack Tecnológico
 
