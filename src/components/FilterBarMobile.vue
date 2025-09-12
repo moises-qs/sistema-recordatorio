@@ -19,25 +19,28 @@
          </button>
       </div>
 
-      <!-- Category Filter - Horizontal Scroll -->
-      <div class="relative">
-         <div class="flex overflow-x-auto pb-2 space-x-2 scrollbar-hide">
-            <button v-for="category in categories" :key="category.value"
-               @click="$emit('update:selectedCategory', category.value)" :class="[
-                  'flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap',
-                  selectedCategory === category.value
-                     ? 'bg-primary-500 text-white shadow-md'
-                     : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
-               ]">
-               <span>{{ category.icon }}</span>
-               {{ category.label }}
-            </button>
+         <!-- Category Filter - Horizontal Scroll -->
+         <div class="relative">
+            <div class="flex overflow-x-auto pb-2 space-x-2 scrollbar-hide">
+               <button v-for="category in categories" :key="category.value"
+                  @click="$emit('update:selectedCategory', category.value)" :class="[
+                     'flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap',
+                     selectedCategory === category.value
+                        ? 'bg-primary-500 text-white shadow-md'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:border-primary-300'
+                  ]">
+                  <span>{{ category.icon }}</span>
+                  {{ category.label }}
+               </button>
+               <!-- Botón para abrir el modal de categorías -->
+               <button @click="showCategoryModal = true" class="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-200 text-gray-700 border border-gray-300 hover:bg-primary-100 ml-2">
+                  <span>➕</span> Gestionar
+               </button>
+            </div>
+            <!-- Fade effect for scroll indication -->
+            <div class="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none"></div>
+            <CategoryModal :show="showCategoryModal" @close="showCategoryModal = false; loadCategories()" />
          </div>
-         <!-- Fade effect for scroll indication -->
-         <div
-            class="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none">
-         </div>
-      </div>
 
       <!-- Quick Filters -->
       <div class="flex flex-wrap gap-2">
@@ -78,7 +81,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { useCategories } from '../composables/useCategories';
+import CategoryModal from './CategoryModal.vue';
 
 const props = defineProps({
    searchQuery: {
@@ -101,13 +106,8 @@ const emit = defineEmits([
    'update:selectedFilter'
 ]);
 
-const categories = [
-   { value: 'all', label: 'Todos', icon: '📋' },
-   { value: 'exam', label: 'Exámenes', icon: '📚' },
-   { value: 'task', label: 'Tareas', icon: '📝' },
-   { value: 'presentation', label: 'Presentaciones', icon: '🎤' },
-   { value: 'meeting', label: 'Reuniones', icon: '👥' }
-];
+const { categories, loadCategories } = useCategories();
+const showCategoryModal = ref(false);
 
 const quickFilters = [
    {
@@ -136,7 +136,7 @@ const hasActiveFilters = computed(() => {
 });
 
 const getCategoryLabel = (value) => {
-   const category = categories.find(c => c.value === value);
+   const category = categories.value.find(c => c.value === value);
    return category ? category.label : '';
 };
 
