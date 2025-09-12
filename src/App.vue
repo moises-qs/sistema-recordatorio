@@ -1,5 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
+import CategoryModal from './components/CategoryModal.vue';
+import CategoryButton from './components/CategoryButton.vue';
 import { useReminders } from './composables/useReminders';
 import { groupByDate } from './utils/dateHelpers';
 import ReminderCard from './components/ReminderCard.vue';
@@ -28,6 +30,7 @@ const {
 } = useReminders();
 
 const showModal = ref(false);
+const showCategoryModal = ref(false);
 const editingReminder = ref(null);
 const currentView = ref('all'); // 'all' | 'upcoming'
 const quickStatsFilter = ref('pending'); // 'all' | 'pending' | 'completed' | 'urgent'
@@ -170,6 +173,8 @@ const handleViewChange = (view) => {
 
                <!-- Actions -->
                <div class="flex items-center gap-2">
+                  <CategoryButton @open="showCategoryModal = true" />
+   <CategoryModal :show="showCategoryModal" @close="showCategoryModal = false" />
                   <!-- View Toggle -->
                   <div class="hidden sm:flex items-center gap-2 p-1 bg-gray-100 rounded-xl">
                      <button @click="currentView = 'all'" :class="[
