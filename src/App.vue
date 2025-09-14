@@ -13,6 +13,7 @@ import QuickStatsMobile from './components/QuickStatsMobile.vue';
 import EmptyState from './components/EmptyState.vue';
 import OptionsMenu from './components/OptionsMenu.vue';
 import { NotificationManager } from './utils/notifications';
+import logo from './assets/logo.png'
 
 const {
    reminders,
@@ -163,7 +164,7 @@ const handleViewChange = (view) => {
                <!-- Logo & Title -->
                <div class="flex items-center gap-3">
                   <div class="w-10 h-10 flex items-center justify-center">
-                     <img src="/recordatorio.svg" alt="EduReminder Logo" class="w-10 h-10" />
+                     <img :src="logo" alt="EduReminder Logo" class="w-10 h-10" />
                   </div>
                   <div>
                      <h1 class="text-xl font-bold text-gray-900">EduReminder</h1>
