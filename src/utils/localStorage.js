@@ -249,3 +249,52 @@ export const storage = {
       return active;
    }
 };
+
+// --- Categorías ---
+const CATEGORY_KEY = 'categories';
+
+function getCategories() {
+   const data = localStorage.getItem(CATEGORY_KEY);
+   if (!data) {
+      // Categorías por defecto
+      const defaults = [
+         { value: 'all', label: 'Todos', icon: '📋' },
+         { value: 'exam', label: 'Exámenes', icon: '📚' },
+         { value: 'task', label: 'Tareas', icon: '📝' },
+         { value: 'presentation', label: 'Presentaciones', icon: '🎤' },
+         { value: 'meeting', label: 'Reuniones', icon: '👥' }
+      ];
+      localStorage.setItem(CATEGORY_KEY, JSON.stringify(defaults));
+      return defaults;
+   }
+   return JSON.parse(data);
+}
+
+function addCategory(category) {
+   const categories = getCategories();
+   categories.push(category);
+   localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories));
+   return category;
+}
+
+function updateCategory(value, updates) {
+   const categories = getCategories();
+   const idx = categories.findIndex(c => c.value === value);
+   if (idx !== -1) {
+      categories[idx] = { ...categories[idx], ...updates };
+      localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories));
+   }
+}
+
+function deleteCategory(value) {
+   let categories = getCategories();
+   categories = categories.filter(c => c.value !== value);
+   localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories));
+}
+
+export const categoryStorage = {
+   getCategories,
+   addCategory,
+   updateCategory,
+   deleteCategory
+};
