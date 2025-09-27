@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import CategoryModal from './components/CategoryModal.vue';
 import CategoryButton from './components/CategoryButton.vue';
 import { useReminders } from './composables/useReminders';
@@ -13,6 +13,7 @@ import QuickStatsMobile from './components/QuickStatsMobile.vue';
 import EmptyState from './components/EmptyState.vue';
 import OptionsMenu from './components/OptionsMenu.vue';
 import { NotificationManager } from './utils/notifications';
+import { Category } from './models/Category.js';
 import logo from './assets/logo.png'
 
 const {
@@ -134,6 +135,11 @@ const getCurrentViewLabel = computed(() => {
 
 const currentReminders = computed(() => {
    return quickStatsFilteredReminders.value;
+});
+
+// Inicializar categorías por defecto al montar la aplicación
+onMounted(() => {
+   Category.initializeDefaults();
 });
 
 const handleClearCompleted = () => {

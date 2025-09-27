@@ -160,6 +160,82 @@ export class Category extends BaseModel {
     })
   }
 
+  /**
+   * Inicializa las categorías por defecto si no existen
+   * @returns {Array<Category>} - Array de categorías por defecto
+   */
+  static initializeDefaults() {
+    const existing = this.all()
+    
+    // Si ya hay categorías, migrar las del sistema antiguo si es necesario
+    if (existing.length === 0) {
+      // Intentar migrar categorías del sistema antiguo (localStorage)
+      this._migrateFromOldSystem()
+    }
+    
+    // Si después de la migración aún no hay categorías, crear las por defecto
+    const currentCategories = this.all()
+    if (currentCategories.length === 0) {
+      const defaultCategories = [
+        {
+          name: 'Examen',
+          icon: '📚',
+          color: '#3498db',
+          description: 'Exámenes y evaluaciones académicas'
+        },
+        {
+          name: 'Tarea',
+          icon: '📝',
+          color: '#2ecc71',
+          description: 'Tareas y asignaciones'
+        },
+        {
+          name: 'Presentación',
+          icon: '🎤',
+          color: '#e74c3c',
+          description: 'Presentaciones y exposiciones'
+        },
+        {
+          name: 'Reunión',
+          icon: '👥',
+          color: '#f39c12',
+          description: 'Reuniones y citas académicas'
+        }
+      ]
+      
+      return this.bulkCreate(defaultCategories)
+    }
+    return currentCategories
+  }
+
+  /**
+   * Migra categorías del sistema antiguo al nuevo modelo
+   * @private
+   */
+  static _migrateFromOldSystem() {
+    try {
+      const oldCategories = JSON.parse(localStorage.getItem('categories') || '[]')
+      if (oldCategories.length > 0) {
+        // Convertir categorías antiguas al nuevo formato
+        const newCategories = oldCategories
+          .filter(cat => cat.value !== 'all') // Excluir "Todos"
+          .map(cat => ({
+            name: cat.label,
+            icon: cat.icon,
+            color: '#95a5a6', // Color por defecto
+            description: `Categoría ${cat.label}`
+          }))
+        
+        if (newCategories.length > 0) {
+          this.bulkCreate(newCategories)
+          console.log(`Migradas ${newCategories.length} categorías del sistema antiguo`)
+        }
+      }
+    } catch (error) {
+      console.warn('Error al migrar categorías del sistema antiguo:', error)
+    }
+  }
+
   // Métodos privados
 
   /**

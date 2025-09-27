@@ -21,7 +21,7 @@ export function useReminderFilters(reminders) {
 
       // Filtrar por categoría
       if (selectedCategory.value !== 'all') {
-         filtered = filtered.filter(r => r.type === selectedCategory.value);
+         filtered = filtered.filter(r => r.category === selectedCategory.value);
       }
 
       // Filtrar por rango de fechas

@@ -76,7 +76,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { Category } from '../models/Category.js';
 
 const props = defineProps({
    searchQuery: {
@@ -99,13 +100,28 @@ const emit = defineEmits([
    'update:selectedFilter'
 ]);
 
-const categories = [
-   { value: 'all', label: 'Todos', icon: '📋' },
-   { value: 'exam', label: 'Exámenes', icon: '📚' },
-   { value: 'task', label: 'Tareas', icon: '📝' },
-   { value: 'presentation', label: 'Presentaciones', icon: '🎤' },
-   { value: 'meeting', label: 'Reuniones', icon: '👥' }
-];
+// Categorías dinámicas
+const categories = ref([]);
+
+const loadCategories = () => {
+   Category.initializeDefaults(); // Asegurar que existan
+   const allCategories = Category.all();
+   
+   // Crear array con "Todos" primero y luego las categorías reales
+   categories.value = [
+      { value: 'all', label: 'Todos', icon: '�' },
+      ...allCategories.map(cat => ({
+         value: cat.name, // Usar nombre en lugar de slug
+         label: cat.name,
+         icon: cat.icon
+      }))
+   ];
+};
+
+// Cargar categorías al montar
+onMounted(() => {
+   loadCategories();
+});
 
 const dateFilters = [
    { value: 'all', label: 'Todas las fechas' },
@@ -121,13 +137,13 @@ const hasActiveFilters = computed(() => {
 });
 
 const getCategoryLabel = (value) => {
-   const category = categories.find(c => c.value === value);
+   const category = categories.value.find(c => c.value === value);
    return category ? `${category.icon} ${category.label}` : '';
 };
 
 const getFilterLabel = (value) => {
    const filter = dateFilters.find(f => f.value === value);
-   return filter ? filter : '';
+   return filter ? filter.label : '';
 };
 
 const clearSearch = () => {

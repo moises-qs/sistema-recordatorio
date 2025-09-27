@@ -62,26 +62,30 @@
 								</div>
 							</div>
 
-							<!-- Type -->
-							<div>
-								<label class="block text-sm font-medium text-gray-700 mb-2">
-									{{ UI_LABELS.FORM.TYPE_LABEL }}
-								</label>
-								<div class="grid grid-cols-2 gap-3">
-									<button v-for="type in REMINDER_TYPES" :key="type.value" type="button"
-										@click="formData.type = type.value" :class="[
-											'flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200',
-											formData.type === type.value
-												? 'border-primary-500 bg-primary-50 text-primary-700'
-												: 'border-gray-200 hover:border-gray-300 text-gray-600'
-										]">
-										<span class="text-lg">{{ type.icon }}</span>
-										<span class="font-medium text-sm">{{ type.label }}</span>
-									</button>
+						<!-- Category -->
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">
+								{{ UI_LABELS.FORM.TYPE_LABEL }}
+							</label>
+							<div class="relative">
+								<select v-model="formData.category" 
+									class="input-field appearance-none cursor-pointer pr-10 bg-white"
+									required>
+									<option v-for="category in availableCategories" :key="category.id" :value="category.name">
+										{{ category.icon }} {{ category.name }}
+									</option>
+								</select>
+								<!-- Custom dropdown arrow -->
+								<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+									<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+									</svg>
 								</div>
 							</div>
-
-							<!-- Date and Time -->
+							<p class="mt-1 text-xs text-gray-500">
+								Selecciona la categoría que mejor se adapte a tu actividad
+							</p>
+						</div>							<!-- Date and Time -->
 							<div>
 								<label class="block text-sm font-medium text-gray-700 mb-2">
 									{{ UI_LABELS.FORM.DATE_LABEL }}
@@ -147,16 +151,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { getUrgencyLevel } from '../utils/dateHelpers';
+import { Category } from '../models/Category.js';
 import { 
-   REMINDER_TYPES, 
-   DEFAULT_REMINDER_TYPE,
    VALIDATION_RULES,
    VALIDATION_MESSAGES,
    URGENCY_INFO_MAP,
    UI_LABELS,
-   Z_INDEX
+   Z_INDEX,
+   DEFAULT_REMINDER_CATEGORY
 } from '../config/constants';
 
 const props = defineProps({
@@ -172,10 +176,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit']);
 
+// Cargar categorías disponibles
+const availableCategories = ref([]);
+
 const formData = ref({
 	title: '',
 	description: '',
-	type: DEFAULT_REMINDER_TYPE,
+	category: DEFAULT_REMINDER_CATEGORY,
 	date: ''
 });
 
@@ -331,7 +338,7 @@ const resetForm = () => {
 	formData.value = {
 		title: '',
 		description: '',
-		type: DEFAULT_REMINDER_TYPE,
+		category: DEFAULT_REMINDER_CATEGORY,
 		date: ''
 	};
 	errors.value = {
@@ -341,13 +348,23 @@ const resetForm = () => {
 	};
 };
 
+// Cargar categorías al montar el componente
+const loadCategories = () => {
+	Category.initializeDefaults(); // Asegurarse de que existan las categorías por defecto
+	availableCategories.value = Category.all();
+};
+
+onMounted(() => {
+	loadCategories();
+});
+
 // Watch for edit mode
 watch(() => props.editReminder, (newVal) => {
 	if (newVal) {
 		formData.value = {
 			title: newVal.title || '',
 			description: newVal.description || '',
-			type: newVal.type || DEFAULT_REMINDER_TYPE,
+			category: newVal.category || DEFAULT_REMINDER_CATEGORY,
 			date: newVal.date ? new Date(newVal.date).toISOString().slice(0, 16) : ''
 		};
 	} else {
