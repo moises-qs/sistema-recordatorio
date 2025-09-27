@@ -126,7 +126,7 @@ const getCategoryLabel = (value) => {
 };
 
 const getFilterLabel = (value) => {
-   const filter = datefilters.find(f => f.value === value);
+   const filter = dateFilters.find(f => f.value === value);
    return filter ? filter : '';
 };
 
