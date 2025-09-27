@@ -15,7 +15,10 @@ export const storage = {
    getReminders() {
       try {
          const data = localStorage.getItem(STORAGE_KEY);
-         return data ? JSON.parse(data) : [];
+         if (!data || data === 'null' || data === 'undefined') {
+            return [];
+         }
+         return JSON.parse(data);
       } catch (error) {
          console.error('Error loading reminders:', error);
          return [];
@@ -46,7 +49,7 @@ export const storage = {
          }
 
          // Verificar que localStorage esté disponible
-         if (typeof Storage === 'undefined') {
+         if (typeof localStorage === 'undefined' || localStorage === null) {
             return {
                success: false,
                error: 'localStorage no está disponible en este navegador',
@@ -83,6 +86,15 @@ export const storage = {
          return { success: true };
 
       } catch (error) {
+         // Manejo específico de errores JSON
+         if (error.message && error.message.includes('circular structure')) {
+            return {
+               success: false,
+               error: 'Error: Los datos contienen referencias circulares y no se pueden serializar',
+               errorType: 'JSON_ERROR'
+            };
+         }
+
          // Manejo específico de errores de localStorage
          if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
             return {
