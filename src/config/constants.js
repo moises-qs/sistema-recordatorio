@@ -75,33 +75,17 @@ export const RELATIVE_DATE_LABELS = {
 };
 
 // ===========================
-// TIPOS DE RECORDATORIO
+// TIPOS DE RECORDATORIO (CATEGORÍAS)
 // ===========================
 
-export const REMINDER_TYPES = [
-   {
-      value: 'exam',
-      label: 'Examen',
-      icon: '📚'
-   },
-   {
-      value: 'task',
-      label: 'Tarea',
-      icon: '📝'
-   },
-   {
-      value: 'presentation',
-      label: 'Presentación',
-      icon: '🎤'
-   },
-   {
-      value: 'meeting',
-      label: 'Reunión',
-      icon: '👥'
-   }
-];
+// Los tipos ahora se obtienen dinámicamente del modelo Category
+// Para mantener compatibilidad, se define una función helper
+export const getReminderTypes = () => {
+   // Esta función será importada donde se necesite y llamará a Category.all()
+   return []  // Temporal - se implementará en los componentes
+}
 
-export const DEFAULT_REMINDER_TYPE = 'task';
+export const DEFAULT_REMINDER_CATEGORY = 'Tarea';
 
 // ===========================
 // VALIDACIÓN DE FORMULARIOS
@@ -196,7 +180,7 @@ export const UI_LABELS = {
       DESCRIPTION_PLACEHOLDER: 'Añade detalles importantes...',
       DESCRIPTION_HELPER: `Máximo ${VALIDATION_RULES.DESCRIPTION.MAX_LENGTH} caracteres`,
 
-      TYPE_LABEL: 'Tipo de recordatorio',
+      TYPE_LABEL: 'Categoría',
 
       DATE_LABEL: 'Fecha y hora *',
       DATE_HELPER: `Debe ser al menos ${VALIDATION_RULES.DATE.MIN_FUTURE_MINUTES} minuto en el futuro`,

@@ -128,16 +128,19 @@ const emit = defineEmits(['toggle', 'edit', 'delete']);
 const showCompletionAnimation = ref(false);
 const completed = computed(() => props.reminder.completed);
 
-const categoryIcons = {
-   exam: '📚',
-   task: '📝',
-   presentation: '🎤',
-   meeting: '👥',
-   other: '📌'
-};
-
 const categoryIcon = computed(() => {
-   return categoryIcons[props.reminder.type] || categoryIcons.other;
+   // Buscar la categoría por nombre para obtener su icono
+   if (props.reminder.category) {
+      // Para mantener compatibilidad, mapear nombres conocidos a iconos
+      const iconMap = {
+         'Examen': '📚',
+         'Tarea': '📝',
+         'Presentación': '🎤',
+         'Reunión': '👥'
+      };
+      return iconMap[props.reminder.category] || '📌';
+   }
+   return '📌';
 });
 
 const formattedDate = computed(() => {
@@ -196,6 +199,7 @@ watch(completed, (newVal, oldVal) => {
 .line-clamp-2 {
    display: -webkit-box;
    -webkit-line-clamp: 2;
+   line-clamp: 2;
    -webkit-box-orient: vertical;
    overflow: hidden;
 }

@@ -39,12 +39,12 @@ export const exportToJSON = (reminders) => {
  * ]); // Descarga archivo: edureminder-export-2024-01-01.csv
  */
 export const exportToCSV = (reminders) => {
-   const headers = ['ID', 'Título', 'Descripción', 'Tipo', 'Fecha', 'Completado', 'Fecha de creación'];
+   const headers = ['ID', 'Título', 'Descripción', 'Categoría', 'Fecha', 'Completado', 'Fecha de creación'];
    const rows = reminders.map(reminder => [
       reminder.id,
       `"${reminder.title}"`,
       `"${reminder.description || ''}"`,
-      reminder.type,
+      reminder.category,
       reminder.date,
       reminder.completed ? 'Sí' : 'No',
       reminder.createdAt
